@@ -30,12 +30,12 @@ Die Anzeige „Tunnel aktiv“ bedeutet, dass NetworkManager das Profil aktivier
 
 ## Voraussetzungen
 
-Omarchy mit der Quickshell-Plugin-API (`omarchy plugin`), laufender NetworkManager, Python 3, `python-gobject` und `libnm`. Die laufende Sitzung braucht die üblichen NetworkManager-/Polkit-Berechtigungen. Es wird kein eigener Root-Helfer installiert.
+Omarchy mit der Quickshell-Plugin-API (`omarchy plugin`), laufender NetworkManager, Python 3, `python-gobject`, `libnm` und `zenity` für die Dateiauswahl. Die laufende Sitzung braucht die üblichen NetworkManager-/Polkit-Berechtigungen. Es wird kein eigener Root-Helfer installiert. Die Dateiauswahl läuft in einem separaten Prozess, damit Fehler nativer Dialogbibliotheken nicht die Shell betreffen.
 
 Fehlende Pakete unter Omarchy bei Bedarf installieren:
 
 ```bash
-omarchy pkg add networkmanager python python-gobject libnm
+omarchy pkg add networkmanager python python-gobject libnm zenity
 ```
 
 ## Lokal installieren

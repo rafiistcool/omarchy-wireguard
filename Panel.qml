@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls as Controls
-import QtQuick.Dialogs
 import Quickshell
 import Quickshell.Io
 import qs.Ui
@@ -17,12 +16,19 @@ Panel {
 
   Service { id: vpn }
 
+  function chooseConfig() {
+    if (vpn.busy || picker.running || !vpn.available) return
+    root.close()
+    picker.running = true
+  }
+
   IpcHandler {
     target: root.ipcTarget
     function open(): void { root.open() }
     function close(): void { root.close() }
     function toggle(): void { root.toggle() }
     function refresh(): void { vpn.refresh() }
+    function chooseConfig(): void { root.chooseConfig() }
     function status(): string {
       return JSON.stringify({available: vpn.available, busy: vpn.busy,
         profiles: vpn.profiles, error: vpn.error, opened: root.opened})
@@ -39,16 +45,19 @@ Panel {
     onPressed: root.toggle()
   }
 
-  FileDialog {
+  // The file chooser runs outside the long-lived shell: native GTK/GVfs
+  // failures cannot take the bar, notifications and lock service down.
+  Process {
     id: picker
-    title: "WireGuard-Konfiguration importieren"
-    nameFilters: ["WireGuard (*.conf)"]
-    fileMode: FileDialog.OpenFile
-    onAccepted: {
-      vpn.run("import", selectedFile.toString())
+    command: ["zenity", "--file-selection", "--title=WireGuard-Konfiguration importieren", "--file-filter=WireGuard | *.conf"]
+    property string output: ""
+    onStarted: output = ""
+    stdout: StdioCollector { onStreamFinished: picker.output = text }
+    onExited: function(exitCode, exitStatus) {
+      if (exitCode === 0 && output !== "") vpn.run("import", output.replace(/\n$/, ""))
+      else if (exitCode !== 1) vpn.actionError = "Dateiauswahl konnte nicht geöffnet werden. Bitte zenity prüfen."
       root.open()
     }
-    onRejected: root.open()
   }
 
   KeyboardPanel {
@@ -116,7 +125,7 @@ Panel {
             enabled: !vpn.busy && vpn.available
             focusable: true
             bordered: true
-            onClicked: { root.close(); picker.open() }
+            onClicked: root.chooseConfig()
           }
           Button {
             text: "Aktualisieren"
