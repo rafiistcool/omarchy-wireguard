@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+# Never commit VPN keys or user configurations.
+*.conf
+*.nmconnection
+*.key
+.venv/

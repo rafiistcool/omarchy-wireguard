@@ -1,0 +1,26 @@
+name: Tests
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  backend:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install libnm bindings
+        run: sudo apt-get update && sudo apt-get install -y python3-gi gir1.2-nm-1.0
+      - name: Test backend (no network changes)
+        run: /usr/bin/python3 -m unittest discover -s tests -v
+      - name: Validate manifest and runtime files
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          manifest = json.loads(Path('manifest.json').read_text())
+          assert manifest['schemaVersion'] == 1
+          assert manifest['id'] == 'rafi.wireguard'
+          for entry in manifest['entryPoints'].values():
+              assert Path(entry).is_file()
+          PY
